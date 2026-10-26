@@ -37,7 +37,7 @@ option(REXGLUE_BUILD_TESTS       "Build PPC instruction and unit tests" OFF)
 option(REXGLUE_ENABLE_SANITIZERS "Enable UndefinedBehaviorSanitizer" OFF)
 option(REXGLUE_ENABLE_FIDELITYFX "Enable optional AMD FidelityFX integration (experimental)" OFF)
 option(REXGLUE_ENABLE_TRACY                "Enable Tracy profiler integration" ON)
-option(REXGLUE_ENABLE_PERF_COUNTERS        "Enable lightweight perf counter registry and overlay" ON)
+option(REXGLUE_ENABLE_PERF_COUNTERS        "Enable lightweight perf counter registry and overlay" OFF)
 
 # Mobile targets (iOS / Android) build the runtime only: the codegen pipeline and
 # the rexglue CLI are host tools and are never cross-compiled onto a device.
@@ -156,15 +156,18 @@ endif()
 # Global compile options
 add_compile_options(
     -fno-strict-aliasing
-    -ffp-model=strict
+    -ffp-model=precise
+    -mcpu=apple-m4 # Apple M4 CPU for ARM64 targets (iOS, macOS, Apple Silicon)
     $<$<CONFIG:DEBUG>:-g>
     $<$<CONFIG:DEBUG>:-O0>
     $<$<CONFIG:RELEASE>:-O3>
     $<$<CONFIG:RELEASE>:-DNDEBUG>
+    $<$<CONFIG:RELEASE>:-flto=thin>
     -fno-char8_t
     # Builds name ~ instead of the builder's home folder in __FILE__ and debug info.
     -ffile-prefix-map=$ENV{HOME}=~
 )
+add_link_options($<$<CONFIG:RELEASE>:-flto=thin>)
 
 # Platform detection (supports AMD64 and ARM64)
 set(REX_TARGET_PROCESSOR "${CMAKE_SYSTEM_PROCESSOR}")
